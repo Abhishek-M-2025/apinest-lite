@@ -5,6 +5,7 @@
 Built with a **glassmorphic dark UI**, it uses a local **Node.js + Express.js proxy server** to bypass browser CORS restrictions and provide a smooth API testing experience.
 
 ---
+<img width="1915" height="910" alt="Image" src="https://github.com/user-attachments/assets/88eafc23-c678-4d2c-856f-910222cc4163" />
 
 # ✨ Features
 
@@ -255,6 +256,6 @@ All collections, variables, and history remain stored locally in the browser. No
 
 # 👨‍💻 Author
 
-Built with ❤️ by **Abhishek Mehra**
+Built with ❤️ by **Abhishek** For Thunder Hacakthon 4
 
 ⭐ Star the repository if you like APINest Lite!
