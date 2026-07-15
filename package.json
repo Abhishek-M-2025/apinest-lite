@@ -1,0 +1,22 @@
+{
+  "name": "apinest-lite",
+  "version": "1.0.0",
+  "description": "APINest Lite - A browser-based API Testing Platform",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js"
+  },
+  "keywords": [
+    "api-tester",
+    "postman-clone",
+    "express",
+    "vanilla-js"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}

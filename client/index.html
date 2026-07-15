@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APINest Lite - Elegant API Client</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-header">
+        <div class="logo-container">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+          <span class="logo-text">APINest <span class="accent-text">Lite</span></span>
+        </div>
+      </div>
+
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab-btn active" id="tab-btn-collections" onclick="switchSidebarTab('collections')">Collections</button>
+        <button class="sidebar-tab-btn" id="tab-btn-history" onclick="switchSidebarTab('history')">History</button>
+        <button class="sidebar-tab-btn" id="tab-btn-env" onclick="switchSidebarTab('env')">Variables</button>
+      </div>
+
+      <div class="sidebar-content">
+        <div class="sidebar-panel active" id="panel-collections">
+          <div class="panel-actions">
+            <button class="btn btn-primary btn-sm" id="btn-create-collection" onclick="openNewCollectionModal()">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              New Collection
+            </button>
+          </div>
+          <div class="collections-list" id="collections-list">
+            <div class="empty-state">No collections created yet.</div>
+          </div>
+        </div>
+
+        <div class="sidebar-panel" id="panel-history">
+          <div class="panel-actions">
+            <button class="btn btn-secondary btn-sm btn-danger-hover" id="btn-clear-history" onclick="clearHistory()">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+              Clear History
+            </button>
+          </div>
+          <div class="history-list" id="history-list">
+            <div class="empty-state">No request history.</div>
+          </div>
+        </div>
+
+        <div class="sidebar-panel" id="panel-env">
+          <div class="panel-actions">
+            <button class="btn btn-primary btn-sm" id="btn-add-env-var" onclick="addNewEnvVarRow()">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              Add Variable
+            </button>
+          </div>
+          <div class="env-variables-container">
+            <div class="env-variables-list" id="env-variables-list"></div>
+            <div class="env-help-text">Use variables using <code>{{VARIABLE_NAME}}</code> syntax.</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <section class="request-bar-section card">
+        <div class="request-bar">
+          <select class="method-select" id="request-method" onchange="onMethodChange()">
+            <option value="GET" class="method-get">GET</option>
+            <option value="POST" class="method-post">POST</option>
+            <option value="PUT" class="method-put">PUT</option>
+            <option value="PATCH" class="method-patch">PATCH</option>
+            <option value="DELETE" class="method-delete">DELETE</option>
+            <option value="QUERY" class="method-query">QUERY</option>
+          </select>
+          <div class="url-input-container">
+            <input type="text" id="request-url" placeholder="https://api.example.com/endpoint" class="url-input" oninput="onUrlInput()">
+          </div>
+          <button class="btn btn-success btn-send" id="btn-send-request" onclick="sendRequest()">
+            <span class="btn-text">Send</span>
+            <div class="spinner hidden" id="send-spinner"></div>
+          </button>
+          <button class="btn btn-secondary btn-save" id="btn-save-request" onclick="openSaveRequestModal()">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+              <path d="M17 21v-8H7v8M7 3v5h8"/>
+            </svg>
+            <span>Save</span>
+          </button>
+        </div>
+      </section>
+
+      <div class="workspace-grid">
+        <section class="request-builder card">
+          <div class="tabs-header">
+            <button class="tab-link active" onclick="switchRequestTab(event, 'req-params')">Params</button>
+            <button class="tab-link" onclick="switchRequestTab(event, 'req-headers')">Headers</button>
+            <button class="tab-link" onclick="switchRequestTab(event, 'req-body')" id="tab-req-body">Body</button>
+            <button class="tab-link" onclick="switchRequestTab(event, 'req-auth')">Auth</button>
+          </div>
+
+          <div class="tabs-content">
+            <div class="tab-panel active" id="req-params">
+              <div class="panel-header">
+                <h3>Query Parameters</h3>
+                <button class="btn btn-outline btn-xs" onclick="addQueryParamRow()">+ Add Parameter</button>
+              </div>
+              <div class="params-table-container">
+                <table class="key-value-table" id="params-table">
+                  <thead>
+                    <tr>
+                      <th width="35%">Key</th>
+                      <th width="55%">Value</th>
+                      <th width="10%"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="params-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="tab-panel" id="req-headers">
+              <div class="panel-header">
+                <h3>Headers</h3>
+                <button class="btn btn-outline btn-xs" onclick="addHeaderRow()">+ Add Header</button>
+              </div>
+              <div class="params-table-container">
+                <table class="key-value-table" id="headers-table">
+                  <thead>
+                    <tr>
+                      <th width="35%">Key</th>
+                      <th width="55%">Value</th>
+                      <th width="10%"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="headers-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="tab-panel" id="req-body">
+              <div class="body-type-selector">
+                <label class="radio-label">
+                  <input type="radio" name="body-type" value="none" checked onchange="onBodyTypeChange()">
+                  <span>None</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="body-type" value="json" onchange="onBodyTypeChange()">
+                  <span>JSON</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="body-type" value="text" onchange="onBodyTypeChange()">
+                  <span>Raw Text</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="body-type" value="form-data" onchange="onBodyTypeChange()">
+                  <span>Form Data</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="body-type" value="urlencoded" onchange="onBodyTypeChange()">
+                  <span>x-www-form-urlencoded</span>
+                </label>
+              </div>
+
+              <div class="body-content-editor" id="body-editor-container">
+                <div class="body-editor-view active" id="body-view-none">
+                  <div class="empty-state">This request does not have a body.</div>
+                </div>
+
+                <div class="body-editor-view" id="body-view-json">
+                  <textarea id="body-json-text" class="code-editor" placeholder='{&#10;  "key": "value"&#10;}' spellcheck="false"></textarea>
+                  <div class="editor-status" id="json-format-status">Valid JSON</div>
+                </div>
+
+                <div class="body-editor-view" id="body-view-text">
+                  <textarea id="body-raw-text" class="code-editor" placeholder="Enter raw request body..." spellcheck="false"></textarea>
+                </div>
+
+                <div class="body-editor-view" id="body-view-form-data">
+                  <div class="panel-header">
+                    <h3>Form Data Fields</h3>
+                    <button class="btn btn-outline btn-xs" onclick="addFormDataRow()">+ Add Field</button>
+                  </div>
+                  <table class="key-value-table" id="form-data-table">
+                    <thead>
+                      <tr>
+                        <th width="35%">Key</th>
+                        <th width="55%">Value</th>
+                        <th width="10%"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="form-data-table-body"></tbody>
+                  </table>
+                </div>
+
+                <div class="body-editor-view" id="body-view-urlencoded">
+                  <div class="panel-header">
+                    <h3>x-www-form-urlencoded Fields</h3>
+                    <button class="btn btn-outline btn-xs" onclick="addUrlEncodedRow()">+ Add Field</button>
+                  </div>
+                  <table class="key-value-table" id="urlencoded-table">
+                    <thead>
+                      <tr>
+                        <th width="35%">Key</th>
+                        <th width="55%">Value</th>
+                        <th width="10%"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="urlencoded-table-body"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-panel" id="req-auth">
+              <div class="auth-config-container">
+                <div class="form-group">
+                  <label for="auth-type" class="form-label">Authentication Type</label>
+                  <select id="auth-type" class="form-control" onchange="onAuthTypeChange()">
+                    <option value="none">No Auth</option>
+                    <option value="bearer">Bearer Token</option>
+                    <option value="basic">Basic Auth</option>
+                    <option value="apikey">API Key</option>
+                  </select>
+                </div>
+
+                <div class="auth-fields" id="auth-fields-container">
+                  <div class="auth-field-view active" id="auth-view-none">
+                    <p class="auth-help-text">This request does not use any authorization headers.</p>
+                  </div>
+
+                  <div class="auth-field-view" id="auth-view-bearer">
+                    <div class="form-group">
+                      <label for="auth-bearer-token" class="form-label">Token</label>
+                      <input type="text" id="auth-bearer-token" class="form-control" placeholder="Enter Bearer Token">
+                    </div>
+                  </div>
+
+                  <div class="auth-field-view" id="auth-view-basic">
+                    <div class="form-group">
+                      <label for="auth-basic-username" class="form-label">Username</label>
+                      <input type="text" id="auth-basic-username" class="form-control" placeholder="Username">
+                    </div>
+                    <div class="form-group">
+                      <label for="auth-basic-password" class="form-label">Password</label>
+                      <input type="password" id="auth-basic-password" class="form-control" placeholder="Password">
+                    </div>
+                  </div>
+
+                  <div class="auth-field-view" id="auth-view-apikey">
+                    <div class="form-row">
+                      <div class="form-group col-6">
+                        <label for="auth-apikey-key" class="form-label">Key</label>
+                        <input type="text" id="auth-apikey-key" class="form-control" placeholder="e.g. X-API-Key">
+                      </div>
+                      <div class="form-group col-6">
+                        <label for="auth-apikey-value" class="form-label">Value</label>
+                        <input type="text" id="auth-apikey-value" class="form-control" placeholder="Value">
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="auth-apikey-addto" class="form-label">Add To</label>
+                      <select id="auth-apikey-addto" class="form-control">
+                        <option value="header">Header</option>
+                        <option value="query">Query Params</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="response-viewer card" id="response-panel">
+          <div class="response-header">
+            <div class="response-tabs">
+              <button class="tab-link active" onclick="switchResponseTab(event, 'res-body')">Response</button>
+              <button class="tab-link" onclick="switchResponseTab(event, 'res-headers')">Headers</button>
+            </div>
+            
+            <div class="response-meta hidden" id="response-meta-container">
+              <span class="meta-badge" id="res-status-badge">200 OK</span>
+              <span class="meta-item">Time: <strong id="res-time">0 ms</strong></span>
+              <span class="meta-item">Size: <strong id="res-size">0 B</strong></span>
+            </div>
+          </div>
+
+          <div class="response-body-container">
+            <div class="response-placeholder" id="response-placeholder">
+              <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zM17.5 6.5h.01"/>
+              </svg>
+              <h3>Send a request to see the response</h3>
+              <p>Fill in the URL, choose a method, and click Send.</p>
+            </div>
+
+            <div class="response-tab-panels hidden" id="response-content-panels">
+              <div class="response-tab-panel active" id="res-body">
+                <div class="response-actions">
+                  <button class="btn btn-secondary btn-xs btn-copy" id="btn-copy-response" onclick="copyResponseToClipboard()">
+                    <svg class="icon icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                    </svg>
+                    <span id="copy-btn-text">Copy Response</span>
+                  </button>
+                </div>
+                <div class="response-code-wrapper">
+                  <pre class="response-code" id="response-body-pre"><code id="response-body-code" class="hljs"></code></pre>
+                </div>
+              </div>
+
+              <div class="response-tab-panel" id="res-headers">
+                <div class="headers-list-container">
+                  <table class="response-headers-table">
+                    <thead>
+                      <tr>
+                        <th>Header</th>
+                        <th>Value</th>
+                      </tr>
+                    </thead>
+                    <tbody id="response-headers-body"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay hidden" id="save-request-modal">
+    <div class="modal card">
+      <div class="modal-header">
+        <h2>Save Request</h2>
+        <button class="modal-close-btn" onclick="closeSaveRequestModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="save-req-name" class="form-label">Request Name</label>
+          <input type="text" id="save-req-name" class="form-control" placeholder="e.g. Get Active Users">
+        </div>
+        <div class="form-group">
+          <label for="save-req-collection" class="form-label">Collection</label>
+          <select id="save-req-collection" class="form-control"></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeSaveRequestModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveRequest()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="new-collection-modal">
+    <div class="modal card">
+      <div class="modal-header">
+        <h2>Create New Collection</h2>
+        <button class="modal-close-btn" onclick="closeNewCollectionModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="new-col-name" class="form-label">Collection Name</label>
+          <input type="text" id="new-col-name" class="form-control" placeholder="e.g. Payment Service APIs">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeNewCollectionModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="createCollection()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
